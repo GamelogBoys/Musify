@@ -1,0 +1,41 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "Information about a registered listener or music publisher",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "The unique user ID" },
+        "email": { "type": "string", "description": "User email address" },
+        "displayName": { "type": "string", "description": "Display name" },
+        "role": { "type": "string", "enum": ["acc", "publisher acc"], "description": "User type: acc (standard account) or publisher acc (artist master developer)" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Registration details" }
+      },
+      "required": ["uid", "email", "role"]
+    },
+    "Play": {
+      "title": "Play Event",
+      "description": "Recorded each time an audio stream starts, enabling real-time publisher growth telemetry",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Play event auto-identifier" },
+        "trackId": { "type": "string", "description": "Referenced track ID" },
+        "trackTitle": { "type": "string", "description": "Track title" },
+        "publisherId": { "type": "string", "description": "Owner identifier of the artist who published" },
+        "listenerId": { "type": "string", "description": "Authenticated user UID or 'guest'" },
+        "timestamp": { "type": "string", "format": "date-time", "description": "When the play happened" }
+      },
+      "required": ["trackId", "trackTitle", "publisherId", "listenerId", "timestamp"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": "User",
+      "description": "User account documents containing user roles (creator vs listener)"
+    },
+    "plays/{playId}": {
+      "schema": "Play",
+      "description": "Global log of listen iterations to back real-time publisher visualizers"
+    }
+  }
+}

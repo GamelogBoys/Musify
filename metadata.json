@@ -1,0 +1,6 @@
+{
+  "name": "Musify",
+  "description": "A premium platform for independent artists to upload high-fidelity audio tracks and listeners to experience studio-quality music with real-time spectrum analysis, live equalizers, and high-resolution playback indicators.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

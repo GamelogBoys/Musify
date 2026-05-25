@@ -1,0 +1,65 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Global Safety Net Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Reuseable global helpers
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // User Profile Rules
+    match /users/{userId} {
+      // Any authenticated user can read other users' profiles (to see artists' details)
+      allow read: if isSignedIn();
+      
+      // Creating/updating a user profile is restricted to the owner
+      allow create: if isOwner(userId)
+                    && incoming().uid == userId
+                    && (incoming().role == "acc" || incoming().role == "publisher acc")
+                    && incoming().email is string
+                    && incoming().email.size() <= 256;
+                    
+      allow update: if isOwner(userId)
+                    && incoming().uid == userId
+                    && incoming().role == existing().role // Role cannot be changed on the fly
+                    && incoming().email is string
+                    && incoming().email.size() <= 256
+                    && incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'email']);
+    }
+
+    // Play Event Logs (for real-time listener growth calculation)
+    match /plays/{playId} {
+      // Anyone can log a play when listening to a song
+      allow create: if true 
+                    && incoming().trackId is string 
+                    && incoming().trackId.size() <= 128
+                    && incoming().trackTitle is string
+                    && incoming().trackTitle.size() <= 256
+                    && incoming().publisherId is string
+                    && incoming().publisherId.size() <= 128
+                    && incoming().listenerId is string
+                    && incoming().listenerId.size() <= 128;
+
+      // Only the corresponding publisher can read their play history logs for their real-time growth widget
+      allow list: if isSignedIn() && resource.data.publisherId == request.auth.uid;
+      allow get: if isSignedIn() && resource.data.publisherId == request.auth.uid;
+    }
+  }
+}
